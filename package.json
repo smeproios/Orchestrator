@@ -1,0 +1,19 @@
+@"
+{
+"name": "smepro-orchestrator",
+"version": "1.0.0",
+"private": true,
+"scripts": {
+"build": "tsc -p tsconfig.json",
+"dev": "ts-node src/index.ts"
+},
+"dependencies": {
+"typescript": "^5.6.0"
+},
+"devDependencies": {
+"@types/node": "^22.0.0",
+"ts-node": "^10.9.2",
+"eslint": "^9.0.0"
+}
+}
+"@ | Set-Content "package.json"

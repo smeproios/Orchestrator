@@ -1,0 +1,26 @@
+@"
+{
+"routing": {
+"defaultStrategy": "hybrid",
+"complexityThresholds": {
+"simple": 0.3,
+"medium": 0.6,
+"high": 0.9
+}
+},
+"compliance": {
+"euAiAct": true,
+"ferpa": true,
+"aacsb": true,
+"sacscoc": true
+},
+"consensus": {
+"minConfidenceScore": 0.8,
+"minPeerAgents": 3
+},
+"evidence": {
+"blockchainEnabled": true,
+"deterministicReplay": true
+}
+}
+"@ | Set-Content "orchestrator.config.json"

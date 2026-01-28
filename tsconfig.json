@@ -1,0 +1,19 @@
+@"
+{
+"compilerOptions": {
+"target": "ES2022",
+"module": "CommonJS",
+"moduleResolution": "Node",
+"strict": true,
+"esModuleInterop": true,
+"skipLibCheck": true,
+"outDir": "dist",
+"baseUrl": "./src",
+"paths": {
+"@types/": ["types/"],
+"@orchestrator/": ["orchestrator/"]
+}
+},
+"include": ["src"]
+}
+"@ | Set-Content "tsconfig.json"
