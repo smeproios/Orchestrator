@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smepro
+  labels:
+    name: smepro
+    environment: prod
+    project: smepro-orchestrator
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smepro-ingress
+  labels:
+    name: smepro-ingress
+    environment: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smepro-monitoring
+  labels:
+    name: smepro-monitoring
+    environment: prod

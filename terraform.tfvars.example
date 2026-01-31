@@ -1,0 +1,26 @@
+# SMEPro Orchestrator - Terraform Variables (Example)
+# Copy this file to terraform.tfvars and fill in your values
+
+azure_subscription_id = "00000000-0000-0000-0000-000000000000"
+azure_tenant_id       = "00000000-0000-0000-0000-000000000000"
+
+azure_region = "southcentralus"
+environment  = "prod"
+
+sql_admin_username = "smeproadmin"
+sql_admin_password = "YourStrongPasswordHere!123"
+
+azuread_admin_object_id = "00000000-0000-0000-0000-000000000000"
+
+# Lamar University IP ranges
+allowed_ip_ranges = [
+  "XX.XX.XX.XX/24",  # Main campus
+  "XX.XX.XX.XX/24",  # LCOB building
+]
+
+tags = {
+  Project     = "SMEPro-Orchestrator"
+  Owner       = "Lamar-University-LCOB"
+  CostCenter  = "LCOB-IT"
+  Environment = "Production"
+}

@@ -1,0 +1,201 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smepro-orchestrator
+  namespace: smepro
+  labels:
+    app: smepro-orchestrator
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: smepro-orchestrator
+  template:
+    metadata:
+      labels:
+        app: smepro-orchestrator
+        version: v1
+    spec:
+      serviceAccountName: smepro-orchestrator
+      containers:
+      - name: orchestrator
+        image: crsmeproprod.azurecr.io/smepro-orchestrator:v1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "8080"
+        - name: ENVIRONMENT
+          value: "prod"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: AZURE_OPENAI_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: openai-endpoint
+        - name: AZURE_OPENAI_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: openai-key
+        - name: SQL_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: sql-connection-string
+        - name: COSMOS_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: cosmos-endpoint
+        - name: COSMOS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: cosmos-key
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: redis-host
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: redis-password
+        - name: STORAGE_ACCOUNT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: storage-account-name
+        - name: STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: smepro-secrets
+              key: storage-account-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - smepro-orchestrator
+              topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        node-type: workloads
+      tolerations: []
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smepro-orchestrator
+  namespace: smepro
+  labels:
+    app: smepro-orchestrator
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: smepro-orchestrator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: smepro-orchestrator
+  namespace: smepro
+  annotations:
+    azure.workload.identity/client-id: ""  # Will be populated by Terraform
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: smepro-orchestrator
+  namespace: smepro
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: smepro-orchestrator
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
